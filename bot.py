@@ -1,3 +1,5 @@
+import json
+
 import config
 import datetime
 import asyncio
@@ -26,8 +28,14 @@ class TelegramBot(Bot):
             row_h: int = 2,
             row_d: int = 2,
             users=None,
+            password: str = '57526748',
+            has_access: bool = False,
+            user_list=None
     ):
         super().__init__(token, parse_mode=parse_mode)
+        if user_list is None:
+            user_list = []
+        self.user_list: list = user_list
         if user_ids is None:
             user_ids = []
         if users is None:
@@ -47,6 +55,8 @@ class TelegramBot(Bot):
         self.user_id: str = user_id
         self.row_h: int = row_h
         self.row_d: int = row_d
+        self.password: str = password
+        self.has_access: bool = has_access
 
 
 bot = TelegramBot(
@@ -75,28 +85,11 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands="start")
 async def cmd_start(message: types.Message):
-    button1 = KeyboardButton("Добавить магазин")
-    button2 = KeyboardButton("Удалить магазин")
-    button3 = KeyboardButton("Добавить таблицу")
-
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.row(button1, button2).add(button3)
-
-    bot.user_id = str(message.from_user.id)
-
     bot.users[str(message.from_user.id)] = {
-        "flag": 0,
-        "flag2": 0,
-        "flag3": 0,
-        "row_h": 2,
-        "row_d": 2,
-        "shop_links": [],
-        "shops_list": [],
+        "access": bot.has_access
     }
-    bot.user_ids.append(str(message.from_user.id))
-
-    await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
-    await message.answer("В первую очередь добавьте таблицу для корректной работы", reply_markup=keyboard)
+    if not bot.users[str(message.from_user.id)]["access"]:
+        await message.answer("Введите пароль")
 
 
 @dp.message_handler(text=["В меню", "Отмена"])
@@ -118,7 +111,7 @@ async def cmd_menu(message: types.Message):
 
 
 @dp.message_handler(text='Добавить таблицу')
-async def add_shop(message: Message) -> None:
+async def add_table(message: Message) -> None:
     bot.user_id = message.from_user.id
     bot.users[str(message.from_user.id)]["flag3"] = 1
 
@@ -126,7 +119,7 @@ async def add_shop(message: Message) -> None:
     menu_button = KeyboardButton("Отмена")
     keyboard.add(menu_button)
 
-    await bot.send_message(message.from_user.id, '🔷 Введите ссылку на таблицу 🔷',  reply_markup=keyboard)
+    await bot.send_message(message.from_user.id, '🔷 Введите ссылку на таблицу 🔷', reply_markup=keyboard)
 
 
 @dp.message_handler(text='Добавить магазин')
@@ -137,7 +130,6 @@ async def add_shop(message: Message) -> None:
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     menu_button = KeyboardButton("Отмена")
     keyboard.add(menu_button)
-
     await bot.send_message(message.from_user.id, '🔷 Введите ссылку на магазин 🔷', reply_markup=keyboard)
 
 
@@ -162,6 +154,20 @@ async def collect_first_data(message: Message) -> None:
             bot.users[str(message.from_user.id)]["flag"] = 0
             await bot.send_message(message.from_user.id, f"✅ Магазин *{info['title']}* успешно добавлен",
                                    parse_mode="Markdown")
+            button1 = KeyboardButton("Добавить магазин")
+            button2 = KeyboardButton("Удалить магазин")
+            button3 = KeyboardButton("Добавить таблицу")
+
+            keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+            keyboard.row(button1, button2).add(button3)
+
+            bot.user_id = str(message.from_user.id)
+
+            bot.users[str(message.from_user.id)]["flag"] = 0
+            bot.users[str(message.from_user.id)]["flag2"] = 0
+            bot.users[str(message.from_user.id)]["flag3"] = 0
+
+            await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
         except:
             await bot.send_message(message.from_user.id, "Проверьте правильность ссылки")
 
@@ -191,6 +197,7 @@ async def collect_first_data(message: Message) -> None:
             bot._google_table.write_data("D1", "Новых отзывов", worksheet_title="Заказы за сутки")
             bot.users[str(message.from_user.id)]["flag3"] = 0
             await bot.send_message(message.from_user.id, "Таблица успешно добавлена")
+            await cmd_menu(message)
     else:
         await bot.send_message(message.from_user.id, "Что-то не так")
 
@@ -212,22 +219,79 @@ async def remove_shop(message: Message) -> None:
 
 @dp.message_handler()
 async def remove(message: Message) -> None:
-    if bot.users[str(message.from_user.id)]['flag2'] == 1:
-        try:
-            for item in bot.users[str(message.from_user.id)]['shops_list']:
-                for key, value in item.items():
-                    if str(message.text) == value['title']:
-                        bot.users[str(message.from_user.id)]["shop_links"].remove(value['link'])
-                        bot.users[str(message.from_user.id)]["shops_list"].remove({key: value})
-                        bot.users[str(message.from_user.id)].pop(key)
-            await message.answer(f'Магазин *{message.text}* удален', parse_mode="Markdown")
+    if not bot.users[str(message.from_user.id)]['access']:
+        if str(message.text) == bot.password:
+            button1 = KeyboardButton("Добавить магазин")
+            button2 = KeyboardButton("Удалить магазин")
+            button3 = KeyboardButton("Добавить таблицу")
 
-            bot.users[str(message.from_user.id)]["flag2"] = 0
-            await cmd_menu(message)
-        except:
-            await message.answer('Выберите магазин, который хотите удалить')
+            keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+            keyboard.row(button1, button2).add(button3)
+
+            bot.user_id = str(message.from_user.id)
+            try:
+                with open('users_ifo.json', 'r', encoding='utf8') as f:
+                    user_list = json.load(f)
+                check = 0
+                for i in user_list:
+                    for key, value in i.items():
+                        if key == str(message.from_user.id):
+                            check = 1
+                if check:
+                    for i in user_list:
+                        for key, value in i.items():
+                            if key == str(message.from_user.id):
+                                bot.users[str(message.from_user.id)] = i[key]
+                                if str(message.from_user.id) not in bot.user_ids:
+                                    bot.user_ids.append(str(message.from_user.id))
+                else:
+                    bot.users[str(message.from_user.id)] = {
+                        "flag": 0,
+                        "flag2": 0,
+                        "flag3": 0,
+                        "row_h": 2,
+                        "row_d": 2,
+                        "shop_links": [],
+                        "shops_list": [],
+                        "access": True,
+                    }
+                    if str(message.from_user.id) not in bot.user_ids:
+                        bot.user_ids.append(str(message.from_user.id))
+            except:
+                bot.users[str(message.from_user.id)] = {
+                    "flag": 0,
+                    "flag2": 0,
+                    "flag3": 0,
+                    "row_h": 2,
+                    "row_d": 2,
+                    "shop_links": [],
+                    "shops_list": [],
+                    "access": True,
+                }
+                if str(message.from_user.id) not in bot.user_ids:
+                    bot.user_ids.append(str(message.from_user.id))
+
+            await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
+            await message.answer("В первую очередь добавьте таблицу для корректной работы", reply_markup=keyboard)
+        else:
+            await message.answer("Введен неверный пароль")
     else:
-        await answer_other(message)
+        if bot.users[str(message.from_user.id)]['flag2'] == 1:
+            try:
+                for item in bot.users[str(message.from_user.id)]['shops_list']:
+                    for key, value in item.items():
+                        if str(message.text) == value['title']:
+                            bot.users[str(message.from_user.id)]["shop_links"].remove(value['link'])
+                            bot.users[str(message.from_user.id)]["shops_list"].remove({key: value})
+                            bot.users[str(message.from_user.id)].pop(key)
+                await message.answer(f'Магазин *{message.text}* удален', parse_mode="Markdown")
+
+                bot.users[str(message.from_user.id)]["flag2"] = 0
+                await cmd_menu(message)
+            except:
+                await message.answer('Выберите магазин, который хотите удалить')
+        else:
+            await answer_other(message)
 
 
 @dp.message_handler()
@@ -236,27 +300,47 @@ async def answer_other(message: Message) -> None:
 
 
 async def send_hour():
+    bot.user_list = []
     for id_ in bot.user_ids:
         text = ''
-        for link in bot.users[id_]['shop_links']:
-            info = parse(link)
-            text_part = f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n'
-            text += text_part
-        text += f"✅Часовой отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}*"
-        await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
-        await bot.send_message(id_, text, parse_mode="Markdown")
+        if len(bot.users[id_]['shop_links']) != 0:
+            for link in bot.users[id_]['shop_links']:
+                info = parse(link)
+                text_part = f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n'
+                text += text_part
+            text += f"✅Часовой отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}*"
+            bot.user_list.append({id_: bot.users[id_]})
+            await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
+            with open("users_ifo.json", "w", encoding="utf8") as f:
+                json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
+            await bot.send_message(id_, text, parse_mode="Markdown")
+        else:
+            await bot.send_message(id_, "Вы не добавили магазины")
+        if not bot.users[str(id_)]['sheet_link']:
+            await bot.send_message(id_, "Вы не добавили таблицу")
+
 
 
 async def send_day():
+    bot.user_list = []
     for id_ in bot.user_ids:
         text = ''
-        for link in bot.users[id_]['shop_links']:
-            info = parse(link)
-            text_part = f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n'
-            text += text_part
-        text += f"✅Дневной отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}*"
-        await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
-        await bot.send_message(id_, text, parse_mode="Markdown")
+        if len(bot.users[id_]['shop_links']) != 0:
+            for link in bot.users[id_]['shop_links']:
+                info = parse(link)
+                text_part = f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n'
+                text += text_part
+            text += f"✅Дневной отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}*"
+        else:
+            await bot.send_message(id_, "Вы не добавили магазины")
+        bot.user_list.append({id_: bot.users[id_]})
+        if bot.users[str(id_)]['sheet_link']:
+            await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
+            with open("users_ifo.json", "w", encoding="utf8") as f:
+                json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
+            await bot.send_message(id_, text, parse_mode="Markdown")
+        else:
+            await bot.send_message(id_, "Вы не добавили таблицу")
 
 
 async def write_cells_h(worksheet_title: str, user_id) -> None:
@@ -266,7 +350,8 @@ async def write_cells_h(worksheet_title: str, user_id) -> None:
         bot._google_table.write_data(f"A{str(bot.users[user_id]['row_h'])}",
                                      f"{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}",
                                      worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"B{str(bot.users[user_id]['row_h'])}", f"{bot.users[user_id][link.split('/')[3]]['title']}",
+        bot._google_table.write_data(f"B{str(bot.users[user_id]['row_h'])}",
+                                     f"{bot.users[user_id][link.split('/')[3]]['title']}",
                                      worksheet_title=worksheet_title)
         bot._google_table.write_data(f"C{str(bot.users[user_id]['row_h'])}",
                                      f"{info['orders'] - bot.users[user_id][link.split('/')[3]]['orders']}",
@@ -284,7 +369,8 @@ async def write_cells_d(worksheet_title: str, user_id) -> None:
         bot._google_table.write_data(f"A{str(bot.users[user_id]['row_d'])}",
                                      f"{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}",
                                      worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"B{str(bot.users[user_id]['row_d'])}", f"{bot.users[user_id][link.split('/')[3]]['title']}",
+        bot._google_table.write_data(f"B{str(bot.users[user_id]['row_d'])}",
+                                     f"{bot.users[user_id][link.split('/')[3]]['title']}",
                                      worksheet_title=worksheet_title)
         bot._google_table.write_data(f"C{str(bot.users[user_id]['row_d'])}",
                                      f"{info['orders'] - bot.users[user_id][link.split('/')[3]]['orders']}",
@@ -296,8 +382,8 @@ async def write_cells_d(worksheet_title: str, user_id) -> None:
 
 
 async def scheduler():
-    schedule.every().day.at("00:00").do(send_hour)
     schedule.every().day.at("00:00").do(send_day)
+    schedule.every().day.at("00:00").do(send_hour)
     schedule.every().day.at("01:00").do(send_hour)
     schedule.every().day.at("02:00").do(send_hour)
     schedule.every().day.at("03:00").do(send_hour)
@@ -323,7 +409,7 @@ async def scheduler():
     schedule.every().day.at("23:00").do(send_hour)
     while True:
         await schedule.run_pending()
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(1)
 
 
 async def on_startup(s):
