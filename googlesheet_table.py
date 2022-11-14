@@ -41,4 +41,11 @@ class GoogleTable:
         wks.add_worksheet("Заказы за сутки")
         wks.del_worksheet(wks.sheet1)
 
+    def write_cells(self, values, crange, worksheet_title: str = "") -> None:
+        googlesheet_client: pygsheets.client.Client = self._get_googlesheet_client()
+        wks: pygsheets.Spreadsheet = googlesheet_client.open_by_url(self.googlesheet_file_url)
+        sheet = wks.worksheet_by_title(worksheet_title)
+        sheet.update_values(crange=crange, values=values)
+
+
         # pygsheets.Cell.set_text_format("A1", "bold")

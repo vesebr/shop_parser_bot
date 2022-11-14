@@ -28,7 +28,7 @@ class TelegramBot(Bot):
             row_h: int = 2,
             row_d: int = 2,
             users=None,
-            password: str = '57526748',
+            password: str = '57526748',  # '57526748',
             has_access: bool = False,
             user_list=None
     ):
@@ -244,6 +244,9 @@ async def remove(message: Message) -> None:
                                 bot.users[str(message.from_user.id)] = i[key]
                                 if str(message.from_user.id) not in bot.user_ids:
                                     bot.user_ids.append(str(message.from_user.id))
+                    await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
+                    await message.answer("Ваши данные загружены",
+                                         reply_markup=keyboard)
                 else:
                     bot.users[str(message.from_user.id)] = {
                         "flag": 0,
@@ -257,6 +260,9 @@ async def remove(message: Message) -> None:
                     }
                     if str(message.from_user.id) not in bot.user_ids:
                         bot.user_ids.append(str(message.from_user.id))
+                    await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
+                    await message.answer("В первую очередь добавьте таблицу для корректной работы",
+                                         reply_markup=keyboard)
             except:
                 bot.users[str(message.from_user.id)] = {
                     "flag": 0,
@@ -271,8 +277,8 @@ async def remove(message: Message) -> None:
                 if str(message.from_user.id) not in bot.user_ids:
                     bot.user_ids.append(str(message.from_user.id))
 
-            await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
-            await message.answer("В первую очередь добавьте таблицу для корректной работы", reply_markup=keyboard)
+                await message.answer("🔹 Вы в главном меню 🔹", reply_markup=keyboard)
+                await message.answer("В первую очередь добавьте таблицу для корректной работы", reply_markup=keyboard)
         else:
             await message.answer("Введен неверный пароль")
     else:
@@ -302,111 +308,169 @@ async def answer_other(message: Message) -> None:
 async def send_hour():
     bot.user_list = []
     for id_ in bot.user_ids:
-        text = ''
-        if len(bot.users[id_]['shop_links']) != 0:
-            for link in bot.users[id_]['shop_links']:
-                info = parse(link)
-                text_part = f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n'
-                text += text_part
-            text += f"✅Часовой отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}*"
             bot.user_list.append({id_: bot.users[id_]})
-            await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
-            with open("users_ifo.json", "w", encoding="utf8") as f:
-                json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
-            await bot.send_message(id_, text, parse_mode="Markdown")
-        else:
-            await bot.send_message(id_, "Вы не добавили магазины")
-        if not bot.users[str(id_)]['sheet_link']:
-            await bot.send_message(id_, "Вы не добавили таблицу")
+            if bot.users[str(id_)]['sheet_link']:
+                await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
+                with open("users_ifo.json", "w", encoding="utf8") as f:
+                    json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
+            else:
+                await bot.send_message(id_, "Вы не добавили таблицу")
 
+            if len(bot.users[id_]['shop_links']) != 0:
+                for link in bot.users[id_]['shop_links']:
+                    info = parse(link)
+                    await bot.send_message(id_,
+                                           text=f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n',
+                                           parse_mode="Markdown")
+                await bot.send_message(id_,
+                                       text=f"✅Часовой отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}:00*",
+                                       parse_mode="Markdown")
+
+            else:
+                await bot.send_message(id_, "Вы не добавили магазины")
 
 
 async def send_day():
     bot.user_list = []
     for id_ in bot.user_ids:
-        text = ''
-        if len(bot.users[id_]['shop_links']) != 0:
-            for link in bot.users[id_]['shop_links']:
-                info = parse(link)
-                text_part = f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n'
-                text += text_part
-            text += f"✅Дневной отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}*"
-        else:
-            await bot.send_message(id_, "Вы не добавили магазины")
         bot.user_list.append({id_: bot.users[id_]})
         if bot.users[str(id_)]['sheet_link']:
             await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
             with open("users_ifo.json", "w", encoding="utf8") as f:
                 json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
-            await bot.send_message(id_, text, parse_mode="Markdown")
         else:
             await bot.send_message(id_, "Вы не добавили таблицу")
+
+        if len(bot.users[id_]['shop_links']) != 0:
+            for link in bot.users[id_]['shop_links']:
+                info = parse(link)
+                await bot.send_message(id_,
+                                       text=f'🔻Магазин *{bot.users[id_][link.split("/")[3]]["title"]}*\n\nВсего заказов: *{info["orders"]}*\nВсего отзывов: *{info["reviews"]}*\n\n    ❕Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["orders"]}*\n    ❕Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["reviews"]}*\n\n',
+                                       parse_mode="Markdown")
+            await bot.send_message(id_,
+                                   text=f"✅Дневной отчет✅\nВремя выгрузки: *{datetime.datetime.now().strftime('%d.%m.%Y %H')}:00:00*",
+                                   parse_mode="Markdown")
+        else:
+            await bot.send_message(id_, "Вы не добавили магазины")
 
 
 async def write_cells_h(worksheet_title: str, user_id) -> None:
     bot._google_table = GoogleTable("key.json", bot.users[user_id]['sheet_link'])
-    for link in bot.users[user_id]['shop_links']:
-        info = parse(link)
-        bot._google_table.write_data(f"A{str(bot.users[user_id]['row_h'])}",
-                                     f"{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}",
-                                     worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"B{str(bot.users[user_id]['row_h'])}",
-                                     f"{bot.users[user_id][link.split('/')[3]]['title']}",
-                                     worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"C{str(bot.users[user_id]['row_h'])}",
-                                     f"{info['orders'] - bot.users[user_id][link.split('/')[3]]['orders']}",
-                                     worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"D{str(bot.users[user_id]['row_h'])}",
-                                     f"{info['reviews'] - bot.users[user_id][link.split('/')[3]]['reviews']}",
-                                     worksheet_title=worksheet_title)
-        bot.users[user_id]['row_h'] += 1
+
+    bot._google_table.write_cells(
+        crange=f'A{str(bot.users[user_id]["row_h"])}:A{str(bot.users[user_id]["row_h"] + len(bot.users[user_id]["list_time"]))}',
+        values=bot.users[user_id]["list_time"], worksheet_title=worksheet_title)
+    bot._google_table.write_cells(
+        crange=f'B{str(bot.users[user_id]["row_h"])}:B{str(bot.users[user_id]["row_h"] + len(bot.users[user_id]["list_titles"]))}',
+        values=bot.users[user_id]["list_titles"], worksheet_title=worksheet_title)
+    bot._google_table.write_cells(
+        crange=f'C{str(bot.users[user_id]["row_h"])}:C{str(bot.users[user_id]["row_h"] + len(bot.users[user_id]["list_orders"]))}',
+        values=bot.users[user_id]["list_orders"], worksheet_title=worksheet_title)
+    bot._google_table.write_cells(
+        crange=f'D{str(bot.users[user_id]["row_h"])}:D{str(bot.users[user_id]["row_h"] + len(bot.users[user_id]["list_reviews"]))}',
+        values=bot.users[user_id]["list_reviews"], worksheet_title=worksheet_title)
+    bot.users[user_id]['row_h'] += len(bot.users[user_id]["list_reviews"])
 
 
-async def write_cells_d(worksheet_title: str, user_id) -> None:
+async def write_cells_d(worksheet_title: str, user_id):
     bot._google_table = GoogleTable("key.json", bot.users[user_id]['sheet_link'])
-    for link in bot.users[user_id]['shop_links']:
-        info = parse(link)
-        bot._google_table.write_data(f"A{str(bot.users[user_id]['row_d'])}",
-                                     f"{datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}",
-                                     worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"B{str(bot.users[user_id]['row_d'])}",
-                                     f"{bot.users[user_id][link.split('/')[3]]['title']}",
-                                     worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"C{str(bot.users[user_id]['row_d'])}",
-                                     f"{info['orders'] - bot.users[user_id][link.split('/')[3]]['orders']}",
-                                     worksheet_title=worksheet_title)
-        bot._google_table.write_data(f"D{str(bot.users[user_id]['row_d'])}",
-                                     f"{info['reviews'] - bot.users[user_id][link.split('/')[3]]['reviews']}",
-                                     worksheet_title=worksheet_title)
-        bot.users[user_id]['row_d'] += 1
+
+    bot._google_table.write_cells(
+        crange=f'A{str(bot.users[user_id]["row_d"])}:A{str(bot.users[user_id]["row_d"] + len(bot.users[user_id]["list_time"]))}',
+        values=bot.users[user_id]["list_time"], worksheet_title=worksheet_title)
+    bot._google_table.write_cells(
+        crange=f'B{str(bot.users[user_id]["row_d"])}:B{str(bot.users[user_id]["row_d"] + len(bot.users[user_id]["list_titles"]))}',
+        values=bot.users[user_id]["list_titles"], worksheet_title=worksheet_title)
+    bot._google_table.write_cells(
+        crange=f'C{str(bot.users[user_id]["row_d"])}:C{str(bot.users[user_id]["row_d"] + len(bot.users[user_id]["list_orders"]))}',
+        values=bot.users[user_id]["list_orders"], worksheet_title=worksheet_title)
+    bot._google_table.write_cells(
+        crange=f'D{str(bot.users[user_id]["row_d"])}:D{str(bot.users[user_id]["row_d"] + len(bot.users[user_id]["list_reviews"]))}',
+        values=bot.users[user_id]["list_reviews"], worksheet_title=worksheet_title)
+    bot.users[user_id]['row_d'] += len(bot.users[user_id]["list_reviews"])
+
+
+async def collect_data_h():
+    for id_ in bot.user_ids:
+        bot.users[id_]["list_time"] = []
+        bot.users[id_]["list_titles"] = []
+        bot.users[id_]["list_orders"] = []
+        bot.users[id_]["list_reviews"] = []
+        for link in bot.users[id_]['shop_links']:
+            info = parse(link)
+            bot.users[id_]["list_time"].append([str(datetime.datetime.now(
+                tz=datetime.timezone(datetime.timedelta(hours=4, minutes=1))).strftime('%d.%m.%Y %H:%M')) + ':00'])
+            bot.users[id_]["list_titles"].append([info['title']])
+            bot.users[id_]["list_orders"].append([info['orders'] - bot.users[id_][link.split('/')[3]]['orders']])
+            bot.users[id_]["list_reviews"].append([info['reviews'] - bot.users[id_][link.split('/')[3]]['reviews']])
+
+
+async def collect_data_d():
+    for id_ in bot.user_ids:
+        bot.users[id_]["list_time"] = []
+        bot.users[id_]["list_titles"] = []
+        bot.users[id_]["list_orders"] = []
+        bot.users[id_]["list_reviews"] = []
+        for link in bot.users[id_]['shop_links']:
+            info = parse(link)
+            bot.users[id_]["list_time"].append([str(datetime.datetime.now(
+                tz=datetime.timezone(datetime.timedelta(hours=4, minutes=1))).strftime('%d.%m.%Y %H:%M')) + ':00'])
+            bot.users[id_]["list_titles"].append([info['title']])
+            bot.users[id_]["list_orders"].append([info['orders'] - bot.users[id_][link.split('/')[3]]['orders']])
+            bot.users[id_]["list_reviews"].append([info['reviews'] - bot.users[id_][link.split('/')[3]]['reviews']])
 
 
 async def scheduler():
-    schedule.every().day.at("00:00").do(send_day)
     schedule.every().day.at("00:00").do(send_hour)
+    schedule.every().day.at("00:01").do(send_day)
+    schedule.every().day.at("00:59").do(collect_data_h)
     schedule.every().day.at("01:00").do(send_hour)
+    schedule.every().day.at("01:59").do(collect_data_h)
     schedule.every().day.at("02:00").do(send_hour)
+    schedule.every().day.at("02:59").do(collect_data_h)
     schedule.every().day.at("03:00").do(send_hour)
+    schedule.every().day.at("03:59").do(collect_data_h)
     schedule.every().day.at("04:00").do(send_hour)
+    schedule.every().day.at("04:59").do(collect_data_h)
     schedule.every().day.at("05:00").do(send_hour)
+    schedule.every().day.at("05:59").do(collect_data_h)
     schedule.every().day.at("06:00").do(send_hour)
+    schedule.every().day.at("06:59").do(collect_data_h)
     schedule.every().day.at("07:00").do(send_hour)
+    schedule.every().day.at("07:59").do(collect_data_h)
     schedule.every().day.at("08:00").do(send_hour)
+    schedule.every().day.at("08:59").do(collect_data_h)
     schedule.every().day.at("09:00").do(send_hour)
+    schedule.every().day.at("09:59").do(collect_data_h)
     schedule.every().day.at("10:00").do(send_hour)
+    schedule.every().day.at("10:59").do(collect_data_h)
     schedule.every().day.at("11:00").do(send_hour)
+    schedule.every().day.at("11:59").do(collect_data_h)
     schedule.every().day.at("12:00").do(send_hour)
+    schedule.every().day.at("12:59").do(collect_data_h)
     schedule.every().day.at("13:00").do(send_hour)
+    schedule.every().day.at("13:59").do(collect_data_h)
     schedule.every().day.at("14:00").do(send_hour)
+    schedule.every().day.at("14:59").do(collect_data_h)
     schedule.every().day.at("15:00").do(send_hour)
+    schedule.every().day.at("15:59").do(collect_data_h)
     schedule.every().day.at("16:00").do(send_hour)
+    schedule.every().day.at("16:59").do(collect_data_h)
     schedule.every().day.at("17:00").do(send_hour)
+    schedule.every().day.at("17:59").do(collect_data_h)
     schedule.every().day.at("18:00").do(send_hour)
+    schedule.every().day.at("18:59").do(collect_data_h)
     schedule.every().day.at("19:00").do(send_hour)
+    schedule.every().day.at("19:59").do(collect_data_h)
     schedule.every().day.at("20:00").do(send_hour)
+    schedule.every().day.at("20:59").do(collect_data_h)
     schedule.every().day.at("21:00").do(send_hour)
+    schedule.every().day.at("21:59").do(collect_data_h)
     schedule.every().day.at("22:00").do(send_hour)
+    schedule.every().day.at("22:59").do(collect_data_h)
     schedule.every().day.at("23:00").do(send_hour)
+    schedule.every().day.at("23:59").do(collect_data_h)
+    schedule.every().day.at("23:59").do(collect_data_d)
     while True:
         await schedule.run_pending()
         await asyncio.sleep(1)
