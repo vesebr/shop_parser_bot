@@ -34,7 +34,7 @@ class TelegramBot(Bot):
             row_h: int = 2,
             row_d: int = 2,
             users=None,
-            password: str = 's',  # '57526748',
+            password: str = '57526748',  # '57526748',
             has_access: bool = False,
             user_list=None
     ):
