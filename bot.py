@@ -2,9 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 import json
-
-from aiogram.utils.markdown import hlink
-
 import config
 import datetime
 import asyncio
@@ -430,7 +427,7 @@ def collect_data_h():
         for link in bot.users[id_]['shop_links']:
             bot.users[id_][link.split('/')[3]]["info"] = parse(link)
             bot.users[id_]["list_time"].append([str(datetime.datetime.now(
-                tz=datetime.timezone(datetime.timedelta(hours=3, minutes=1))).strftime('%d.%m.%Y %H:%M')) + ':00'])
+                tz=datetime.timezone(datetime.timedelta(hours=3))).strftime('%d.%m.%Y %H:%M')) + ':00'])
             bot.users[id_]["list_titles"].append([bot.users[id_][link.split('/')[3]]["info"]['title']])
             bot.users[id_]["list_orders"].append([bot.users[id_][link.split('/')[3]]["info"]['orders'] -
                                                   bot.users[id_][link.split('/')[3]]["hour"]['orders']])
