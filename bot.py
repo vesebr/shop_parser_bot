@@ -3,7 +3,6 @@
 
 import json
 
-
 from aiogram.utils.markdown import hlink
 
 import config
@@ -89,14 +88,16 @@ dp = Dispatcher(bot)
 # }
 
 @dp.message_handler(commands="test")
-async def test(message: Message, link = "https://kazanexpress.ru/auto-box16"):
-        info = parse(link)
-        await bot.send_message(message.from_user.id,
-                               #text=f'🔻Магазин *<a href=bot.users[id_][link.split("/")[3]]["title"]"> {bot.users[id_][link.split("/")[3]]["link"]}</a>*\nВсего отзывов: *{info["reviews"]}*\n\n    📦Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}*\n    ⭐Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}*',
-                               text=f'<a href="{bot.users[str(message.from_user.id)][link.split("/")[3]]["link"]}">{bot.users[str(message.from_user.id)][link.split("/")[3]]["title"]}</a>',
-                               parse_mode="HTML", disable_web_page_preview=True)
-        bot.users[str(message.from_user.id)][link.split("/")[3]]["hour"]["orders"] = info['orders']
-        bot.users[str(message.from_user.id)][link.split("/")[3]]["hour"]["reviews"] = info['reviews']
+async def test(message: Message, link="https://kazanexpress.ru/auto-box16"):
+    info = parse(link)
+    await bot.send_message(message.from_user.id,
+                           # text=f'🔻Магазин *<a href=bot.users[id_][link.split("/")[3]]["title"]"> {bot.users[id_][link.split("/")[3]]["link"]}</a>*\nВсего отзывов: *{info["reviews"]}*\n\n    📦Новых заказов: *{info["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}*\n    ⭐Новых отзывов: *{info["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}*',
+                           text=f'<a href="{bot.users[str(message.from_user.id)][link.split("/")[3]]["link"]}">{bot.users[str(message.from_user.id)][link.split("/")[3]]["title"]}</a>',
+                           parse_mode="HTML", disable_web_page_preview=True)
+    bot.users[str(message.from_user.id)][link.split("/")[3]]["hour"]["orders"] = info['orders']
+    bot.users[str(message.from_user.id)][link.split("/")[3]]["hour"]["reviews"] = info['reviews']
+
+
 @dp.message_handler(commands="start")
 async def cmd_start(message: types.Message):
     bot.users[str(message.from_user.id)] = {
@@ -163,7 +164,7 @@ async def collect_first_data(message: Message) -> None:
                          "reviews": info["reviews"],
                          },
                 "day": {"orders": info["orders"],
-                        "reviews": info["reviews"],},
+                        "reviews": info["reviews"], },
             }
             # a = url.split('/')[3]
             # await bot.send_message(message.from_user.id, f"Название: {bot.users[str(message.from_user.id)][a]['title']}\nЗаказов: {bot.users[str(message.from_user.id)][a]['orders']}\nОтзывов: {bot.users[str(message.from_user.id)][a]['reviews']}")
@@ -279,7 +280,6 @@ async def remove(message: Message) -> None:
                         "shops_list": [],
                         "access": True,
 
-
                     }
                     if str(message.from_user.id) not in bot.user_ids:
                         bot.user_ids.append(str(message.from_user.id))
@@ -329,12 +329,12 @@ async def answer_other(message: Message) -> None:
     await message.answer('Я понимаю только заданные команды')
 
 
-
 async def send_hour():
+    collect_data_h()
     bot.user_list = []
     for id_ in bot.user_ids:
         bot.user_list.append({id_: bot.users[id_]})
-        if bot.users[str(id_)]['sheet_link']:
+        if bot.users[id_]['sheet_link']:
             await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
 
         else:
@@ -342,13 +342,13 @@ async def send_hour():
 
         if len(bot.users[id_]['shop_links']) != 0:
             for link in bot.users[id_]['shop_links']:
-                # info = parse(link)
-
                 await bot.send_message(id_,
-                                       text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>',
+                                       text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>',
                                        parse_mode="HTML", disable_web_page_preview=True)
-                bot.users[id_][link.split("/")[3]]["hour"]["orders"] = bot.users[id_][link.split("/")[3]]["info"]['orders']
-                bot.users[id_][link.split("/")[3]]["hour"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"]['reviews']
+                bot.users[id_][link.split("/")[3]]["hour"]["orders"] = bot.users[id_][link.split("/")[3]]["info"][
+                    'orders']
+                bot.users[id_][link.split("/")[3]]["hour"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"][
+                    'reviews']
             with open("users_ifo.json", "w", encoding="utf8") as f:
                 json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
             await bot.send_message(id_,
@@ -363,7 +363,7 @@ async def send_day():
     bot.user_list = []
     for id_ in bot.user_ids:
         bot.user_list.append({id_: bot.users[id_]})
-        if bot.users[str(id_)]['sheet_link']:
+        if bot.users[id_]['sheet_link']:
             await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
 
         else:
@@ -372,10 +372,12 @@ async def send_day():
         if len(bot.users[id_]['shop_links']) != 0:
             for link in bot.users[id_]['shop_links']:
                 await bot.send_message(id_,
-                                       text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["day"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["day"]["reviews"]}</b>',
+                                       text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["day"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["day"]["reviews"]}</b>',
                                        parse_mode="HTML", disable_web_page_preview=True)
-                bot.users[id_][link.split("/")[3]]["day"]["orders"] = bot.users[id_][link.split("/")[3]]["info"]['orders']
-                bot.users[id_][link.split("/")[3]]["day"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"]['reviews']
+                bot.users[id_][link.split("/")[3]]["day"]["orders"] = bot.users[id_][link.split("/")[3]]["info"][
+                    'orders']
+                bot.users[id_][link.split("/")[3]]["day"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"][
+                    'reviews']
             with open("users_ifo.json", "w", encoding="utf8") as f:
                 json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
             await bot.send_message(id_,
@@ -387,7 +389,6 @@ async def send_day():
 
 async def write_cells_h(worksheet_title: str, user_id) -> None:
     bot._google_table = GoogleTable("key.json", bot.users[user_id]['sheet_link'])
-
     bot._google_table.write_cells(
         crange=f'A{str(bot.users[user_id]["row_h"])}:A{str(bot.users[user_id]["row_h"] + len(bot.users[user_id]["list_time"]))}',
         values=bot.users[user_id]["list_time"], worksheet_title=worksheet_title)
@@ -405,7 +406,6 @@ async def write_cells_h(worksheet_title: str, user_id) -> None:
 
 async def write_cells_d(worksheet_title: str, user_id):
     bot._google_table = GoogleTable("key.json", bot.users[user_id]['sheet_link'])
-
     bot._google_table.write_cells(
         crange=f'A{str(bot.users[user_id]["row_d"])}:A{str(bot.users[user_id]["row_d"] + len(bot.users[user_id]["list_time"]))}',
         values=bot.users[user_id]["list_time"], worksheet_title=worksheet_title)
@@ -421,7 +421,7 @@ async def write_cells_d(worksheet_title: str, user_id):
     bot.users[user_id]['row_d'] += len(bot.users[user_id]["list_reviews"])
 
 
-async def collect_data_h():
+def collect_data_h():
     for id_ in bot.user_ids:
         bot.users[id_]["list_time"] = []
         bot.users[id_]["list_titles"] = []
@@ -432,8 +432,10 @@ async def collect_data_h():
             bot.users[id_]["list_time"].append([str(datetime.datetime.now(
                 tz=datetime.timezone(datetime.timedelta(hours=3, minutes=1))).strftime('%d.%m.%Y %H:%M')) + ':00'])
             bot.users[id_]["list_titles"].append([bot.users[id_][link.split('/')[3]]["info"]['title']])
-            bot.users[id_]["list_orders"].append([bot.users[id_][link.split('/')[3]]["info"]['orders'] - bot.users[id_][link.split('/')[3]]["hour"]['orders']])
-            bot.users[id_]["list_reviews"].append([bot.users[id_][link.split('/')[3]]["info"]['reviews'] - bot.users[id_][link.split('/')[3]]["hour"]['reviews']])
+            bot.users[id_]["list_orders"].append([bot.users[id_][link.split('/')[3]]["info"]['orders'] -
+                                                  bot.users[id_][link.split('/')[3]]["hour"]['orders']])
+            bot.users[id_]["list_reviews"].append([bot.users[id_][link.split('/')[3]]["info"]['reviews'] -
+                                                   bot.users[id_][link.split('/')[3]]["hour"]['reviews']])
 
 
 async def collect_data_d():
@@ -447,61 +449,40 @@ async def collect_data_d():
             bot.users[id_]["list_time"].append([str(datetime.datetime.now(
                 tz=datetime.timezone(datetime.timedelta(hours=3, minutes=1))).strftime('%d.%m.%Y %H:%M')) + ':00'])
             bot.users[id_]["list_titles"].append([bot.users[id_][link.split('/')[3]]["info"]['title']])
-            bot.users[id_]["list_orders"].append([bot.users[id_][link.split('/')[3]]["info"]['orders'] - bot.users[id_][link.split('/')[3]]["day"]['orders']])
-            bot.users[id_]["list_reviews"].append([bot.users[id_][link.split('/')[3]]["info"]['reviews'] - bot.users[id_][link.split('/')[3]]["day"]['reviews']])
+            bot.users[id_]["list_orders"].append([bot.users[id_][link.split('/')[3]]["info"]['orders'] -
+                                                  bot.users[id_][link.split('/')[3]]["day"]['orders']])
+            bot.users[id_]["list_reviews"].append([bot.users[id_][link.split('/')[3]]["info"]['reviews'] -
+                                                   bot.users[id_][link.split('/')[3]]["day"]['reviews']])
 
 
 async def scheduler():
+    schedule.every().day.at("00:00").do(collect_data_d)
     schedule.every().day.at("00:00").do(send_hour)
     schedule.every().day.at("00:01").do(send_day)
-    schedule.every().day.at("00:59").do(collect_data_h)
     schedule.every().day.at("01:00").do(send_hour)
-    schedule.every().day.at("01:59").do(collect_data_h)
     schedule.every().day.at("02:00").do(send_hour)
-    schedule.every().day.at("02:59").do(collect_data_h)
     schedule.every().day.at("03:00").do(send_hour)
-    schedule.every().day.at("03:59").do(collect_data_h)
     schedule.every().day.at("04:00").do(send_hour)
-    schedule.every().day.at("04:59").do(collect_data_h)
     schedule.every().day.at("05:00").do(send_hour)
-    schedule.every().day.at("05:59").do(collect_data_h)
     schedule.every().day.at("06:00").do(send_hour)
-    schedule.every().day.at("06:59").do(collect_data_h)
     schedule.every().day.at("07:00").do(send_hour)
-    schedule.every().day.at("07:59").do(collect_data_h)
     schedule.every().day.at("08:00").do(send_hour)
-    schedule.every().day.at("08:59").do(collect_data_h)
     schedule.every().day.at("09:00").do(send_hour)
-    schedule.every().day.at("09:59").do(collect_data_h)
     schedule.every().day.at("10:00").do(send_hour)
-    schedule.every().day.at("10:59").do(collect_data_h)
     schedule.every().day.at("11:00").do(send_hour)
-    schedule.every().day.at("11:59").do(collect_data_h)
     schedule.every().day.at("12:00").do(send_hour)
-    schedule.every().day.at("12:59").do(collect_data_h)
     schedule.every().day.at("13:00").do(send_hour)
-    schedule.every().day.at("13:59").do(collect_data_h)
     schedule.every().day.at("14:00").do(send_hour)
-    schedule.every().day.at("14:59").do(collect_data_h)
     schedule.every().day.at("15:00").do(send_hour)
-    schedule.every().day.at("15:59").do(collect_data_h)
     schedule.every().day.at("16:00").do(send_hour)
-    schedule.every().day.at("16:59").do(collect_data_h)
     schedule.every().day.at("17:00").do(send_hour)
-    schedule.every().day.at("17:59").do(collect_data_h)
     schedule.every().day.at("18:00").do(send_hour)
-    schedule.every().day.at("18:59").do(collect_data_h)
     schedule.every().day.at("19:00").do(send_hour)
-    schedule.every().day.at("19:59").do(collect_data_h)
     schedule.every().day.at("20:00").do(send_hour)
-    schedule.every().day.at("20:59").do(collect_data_h)
     schedule.every().day.at("21:00").do(send_hour)
-    schedule.every().day.at("21:59").do(collect_data_h)
     schedule.every().day.at("22:00").do(send_hour)
-    schedule.every().day.at("22:59").do(collect_data_h)
     schedule.every().day.at("23:00").do(send_hour)
-    schedule.every().day.at("23:59").do(collect_data_h)
-    schedule.every().day.at("23:59").do(collect_data_d)
+
     while True:
         await schedule.run_pending()
         await asyncio.sleep(1)
@@ -513,5 +494,4 @@ async def on_startup(s):
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
 
-
-#1
+# 1
