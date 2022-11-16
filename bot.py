@@ -480,9 +480,9 @@ async def scheduler():
     schedule.every().day.at("21:00").do(send_hour)
     schedule.every().day.at("22:00").do(send_hour)
     schedule.every().day.at("23:00").do(send_hour)
-    schedule.every().day.at("14:35").do(collect_data_d)
-    schedule.every().day.at("14:35").do(send_hour)
-    schedule.every().day.at("14:36").do(send_day)
+    schedule.every().day.at("15:40").do(collect_data_d)
+    schedule.every().day.at("15:40").do(send_hour)
+    schedule.every().day.at("15:41").do(send_day)
 
     while True:
         await schedule.run_pending()
