@@ -30,7 +30,7 @@ class TelegramBot(Bot):
             row_h: int = 2,
             row_d: int = 2,
             users=None,
-            password: str = '57526748',  # '57526748',
+            password: str = 's',  # '57526748',
             has_access: bool = False,
             user_list=None
     ):
@@ -450,6 +450,7 @@ async def collect_data_d():
                                                   bot.users[id_][link.split('/')[3]]["day"]['orders']])
             bot.users[id_]["list_reviews"].append([bot.users[id_][link.split('/')[3]]["info"]['reviews'] -
                                                    bot.users[id_][link.split('/')[3]]["day"]['reviews']])
+    print('данные собраны')
 
 
 async def scheduler():
@@ -479,6 +480,9 @@ async def scheduler():
     schedule.every().day.at("21:00").do(send_hour)
     schedule.every().day.at("22:00").do(send_hour)
     schedule.every().day.at("23:00").do(send_hour)
+    schedule.every().day.at("15:30").do(collect_data_d)
+    schedule.every().day.at("15:30").do(send_hour)
+    schedule.every().day.at("15:30").do(send_day)
 
     while True:
         await schedule.run_pending()
