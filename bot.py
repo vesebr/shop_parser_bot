@@ -450,13 +450,10 @@ async def collect_data_d():
                                                   bot.users[id_][link.split('/')[3]]["day"]['orders']])
             bot.users[id_]["list_reviews"].append([bot.users[id_][link.split('/')[3]]["info"]['reviews'] -
                                                    bot.users[id_][link.split('/')[3]]["day"]['reviews']])
-    print('данные собраны')
 
 
 async def scheduler():
-    schedule.every().day.at("00:00").do(collect_data_d)
     schedule.every().day.at("00:00").do(send_hour)
-    schedule.every().day.at("00:01").do(send_day)
     schedule.every().day.at("01:00").do(send_hour)
     schedule.every().day.at("02:00").do(send_hour)
     schedule.every().day.at("03:00").do(send_hour)
@@ -476,13 +473,13 @@ async def scheduler():
     schedule.every().day.at("17:00").do(send_hour)
     schedule.every().day.at("18:00").do(send_hour)
     schedule.every().day.at("19:00").do(send_hour)
+    schedule.every().day.at("20:00").do(collect_data_d)
     schedule.every().day.at("20:00").do(send_hour)
+    schedule.every().day.at("20:01").do(send_day)
     schedule.every().day.at("21:00").do(send_hour)
     schedule.every().day.at("22:00").do(send_hour)
     schedule.every().day.at("23:00").do(send_hour)
-    schedule.every().day.at("12:05").do(collect_data_d)
-    schedule.every().day.at("12:05").do(send_hour)
-    schedule.every().day.at("12:06").do(send_day)
+
 
     while True:
         await schedule.run_pending()
