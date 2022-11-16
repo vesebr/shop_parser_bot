@@ -473,10 +473,10 @@ async def scheduler():
     schedule.every().day.at("17:00").do(send_hour)
     schedule.every().day.at("18:00").do(send_hour)
     schedule.every().day.at("19:00").do(send_hour)
-    schedule.every().day.at("20:00").do(collect_data_d)
     schedule.every().day.at("20:00").do(send_hour)
-    schedule.every().day.at("20:01").do(send_day)
+    schedule.every().day.at("21:00").do(collect_data_d)
     schedule.every().day.at("21:00").do(send_hour)
+    schedule.every().day.at("21:01").do(send_day)
     schedule.every().day.at("22:00").do(send_hour)
     schedule.every().day.at("23:00").do(send_hour)
 
