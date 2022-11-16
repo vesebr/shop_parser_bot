@@ -480,9 +480,9 @@ async def scheduler():
     schedule.every().day.at("21:00").do(send_hour)
     schedule.every().day.at("22:00").do(send_hour)
     schedule.every().day.at("23:00").do(send_hour)
-    # schedule.every().day.at("15:40").do(collect_data_d)
-    schedule.every().day.at("15:45").do(send_hour)
-    # schedule.every().day.at("15:41").do(send_day)
+    schedule.every().day.at("12:05").do(collect_data_d)
+    schedule.every().day.at("12:05").do(send_hour)
+    schedule.every().day.at("12:06").do(send_day)
 
     while True:
         await schedule.run_pending()
@@ -494,5 +494,3 @@ async def on_startup(s):
 
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
-
-# 1
