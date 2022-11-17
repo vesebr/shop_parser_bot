@@ -44,8 +44,8 @@ class GoogleTable:
     def write_cells(self, values, crange, worksheet_title: str = "") -> None:
         googlesheet_client: pygsheets.client.Client = self._get_googlesheet_client()
         wks: pygsheets.Spreadsheet = googlesheet_client.open_by_url(self.googlesheet_file_url)
-        _sheet_ = wks.worksheet_by_title(worksheet_title)
-        _sheet_.update_values(crange=crange, values=values)
+        sheet = wks.worksheet_by_title(worksheet_title)
+        sheet.update_values(crange=crange, values=values, extend=True)
 
 
         # pygsheets.Cell.set_text_format("A1", "bold")
