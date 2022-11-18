@@ -137,7 +137,7 @@ async def add_table(message: Message) -> None:
 @dp.message_handler(text='Добавить магазин')
 async def add_shop(message: Message) -> None:
     bot.users[str(message.from_user.id)]["flag"] = 1
-    bot.user_id = message.from_user.id
+    bot.user_id = str(message.from_user.id)
 
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     menu_button = KeyboardButton("Отмена")
@@ -331,8 +331,9 @@ async def send_hour():
     for id_ in bot.user_ids:
         bot.user_list.append({id_: bot.users[id_]})
         if len(bot.users[id_]['sheet_link']) != 0:
-            await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
+
             if len(bot.users[id_]['shop_links']) != 0:
+                await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
                 for link in bot.users[id_]['shop_links']:
                     await bot.send_message(id_,
                                            text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>',
@@ -361,9 +362,10 @@ async def send_day():
     for id_ in bot.user_ids:
         bot.user_list.append({id_: bot.users[id_]})
         if len(bot.users[id_]['sheet_link']) != 0:
-            await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
+
 
             if len(bot.users[id_]['shop_links']) != 0:
+                await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
                 for link in bot.users[id_]['shop_links']:
                     await bot.send_message(id_,
                                            text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["day"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["day"]["reviews"]}</b>',
