@@ -163,8 +163,6 @@ async def collect_first_data(message: Message) -> None:
                 "day": {"orders": info["orders"],
                         "reviews": info["reviews"], },
             }
-            # a = url.split('/')[3]
-            # await bot.send_message(message.from_user.id, f"Название: {bot.users[str(message.from_user.id)][a]['title']}\nЗаказов: {bot.users[str(message.from_user.id)][a]['orders']}\nОтзывов: {bot.users[str(message.from_user.id)][a]['reviews']}")
 
             if url not in bot.users[str(message.from_user.id)]['shop_links']:
                 bot.users[str(message.from_user.id)]['shop_links'].append(url)
@@ -276,6 +274,7 @@ async def remove(message: Message) -> None:
                         "shop_links": [],
                         "shops_list": [],
                         "access": True,
+                        "sheet_link": "",
 
                     }
                     if str(message.from_user.id) not in bot.user_ids:
@@ -331,57 +330,59 @@ async def send_hour():
     bot.user_list = []
     for id_ in bot.user_ids:
         bot.user_list.append({id_: bot.users[id_]})
-        if bot.users[id_]['sheet_link']:
+        if len(bot.users[id_]['sheet_link']) != 0:
             await write_cells_h(worksheet_title="Заказы за час", user_id=id_)
+            if len(bot.users[id_]['shop_links']) != 0:
+                for link in bot.users[id_]['shop_links']:
+                    await bot.send_message(id_,
+                                           text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>',
+                                           parse_mode="HTML", disable_web_page_preview=True)
+                    bot.users[id_][link.split("/")[3]]["hour"]["orders"] = bot.users[id_][link.split("/")[3]]["info"][
+                        'orders']
+                    bot.users[id_][link.split("/")[3]]["hour"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"][
+                        'reviews']
+                with open("users_ifo.json", "w", encoding="utf8") as f:
+                    json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
+                await bot.send_message(id_,
+                                       text=f"✅Часовой отчет✅\nВремя выгрузки: *{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).strftime('%d.%m.%Y %H:%M')}:00*",
+                                       parse_mode="Markdown")
+
+            else:
+                await bot.send_message(id_, "Вы не добавили магазины")
 
         else:
             await bot.send_message(id_, "Вы не добавили таблицу")
 
-        if len(bot.users[id_]['shop_links']) != 0:
-            for link in bot.users[id_]['shop_links']:
-                await bot.send_message(id_,
-                                       text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["hour"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["hour"]["reviews"]}</b>',
-                                       parse_mode="HTML", disable_web_page_preview=True)
-                bot.users[id_][link.split("/")[3]]["hour"]["orders"] = bot.users[id_][link.split("/")[3]]["info"][
-                    'orders']
-                bot.users[id_][link.split("/")[3]]["hour"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"][
-                    'reviews']
-            with open("users_ifo.json", "w", encoding="utf8") as f:
-                json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
-            await bot.send_message(id_,
-                                   text=f"✅Часовой отчет✅\nВремя выгрузки: *{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).strftime('%d.%m.%Y %H:%M')}:00*",
-                                   parse_mode="Markdown")
 
-        else:
-            await bot.send_message(id_, "Вы не добавили магазины")
 
 
 async def send_day():
     bot.user_list = []
     for id_ in bot.user_ids:
         bot.user_list.append({id_: bot.users[id_]})
-        if bot.users[id_]['sheet_link']:
+        if len(bot.users[id_]['sheet_link']) != 0:
             await write_cells_d(worksheet_title="Заказы за сутки", user_id=id_)
 
+            if len(bot.users[id_]['shop_links']) != 0:
+                for link in bot.users[id_]['shop_links']:
+                    await bot.send_message(id_,
+                                           text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["day"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["day"]["reviews"]}</b>',
+                                           parse_mode="HTML", disable_web_page_preview=True)
+                    bot.users[id_][link.split("/")[3]]["day"]["orders"] = bot.users[id_][link.split("/")[3]]["info"][
+                        'orders']
+                    bot.users[id_][link.split("/")[3]]["day"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"][
+                        'reviews']
+                with open("users_ifo.json", "w", encoding="utf8") as f:
+                    json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
+                await bot.send_message(id_,
+                                       text=f"✅Дневной отчет✅\nВремя выгрузки: *{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).strftime('%d.%m.%Y %H')}:00:00*",
+                                       parse_mode="Markdown")
+            else:
+                await bot.send_message(id_, "Вы не добавили магазины")
         else:
             await bot.send_message(id_, "Вы не добавили таблицу")
 
-        if len(bot.users[id_]['shop_links']) != 0:
-            for link in bot.users[id_]['shop_links']:
-                await bot.send_message(id_,
-                                       text=f'🔻Магазин <b><a href="{bot.users[id_][link.split("/")[3]]["link"]}">{bot.users[id_][link.split("/")[3]]["title"]}</a></b>\nВсего заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"]}</b>\nВсего отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"]}</b>\n\n    📦Новых заказов: <b>{bot.users[id_][link.split("/")[3]]["info"]["orders"] - bot.users[id_][link.split("/")[3]]["day"]["orders"]}</b>\n    ⭐Новых отзывов: <b>{bot.users[id_][link.split("/")[3]]["info"]["reviews"] - bot.users[id_][link.split("/")[3]]["day"]["reviews"]}</b>',
-                                       parse_mode="HTML", disable_web_page_preview=True)
-                bot.users[id_][link.split("/")[3]]["day"]["orders"] = bot.users[id_][link.split("/")[3]]["info"][
-                    'orders']
-                bot.users[id_][link.split("/")[3]]["day"]["reviews"] = bot.users[id_][link.split("/")[3]]["info"][
-                    'reviews']
-            with open("users_ifo.json", "w", encoding="utf8") as f:
-                json.dump(bot.user_list, f, sort_keys=False, indent=4, ensure_ascii=False)
-            await bot.send_message(id_,
-                                   text=f"✅Дневной отчет✅\nВремя выгрузки: *{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=3))).strftime('%d.%m.%Y %H')}:00:00*",
-                                   parse_mode="Markdown")
-        else:
-            await bot.send_message(id_, "Вы не добавили магазины")
+
 
 
 async def write_cells_h(worksheet_title: str, user_id) -> None:
